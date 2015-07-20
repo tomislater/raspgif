@@ -14,8 +14,6 @@ setup(
     url='https://github.com/tomislater/raspgif',
     license='MIT License',
     author='Tomasz Święcicki',
-    install_requires=[
-    ],
     author_email='tomislater@gmail.com',
     description='Regional Atmospheric Soaring Prediction as a gif.',
     packages=['raspgif'],
