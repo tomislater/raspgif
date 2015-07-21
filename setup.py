@@ -1,11 +1,7 @@
 from __future__ import print_function
 from setuptools import setup
 
-import os
-
 import raspgif
-
-here = os.path.abspath(os.path.dirname(__file__))
 
 
 setup(

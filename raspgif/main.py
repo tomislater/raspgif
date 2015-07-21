@@ -1,18 +1,21 @@
+import sys
 import click
 import asyncio
 import aiohttp
 
 import constants
+from subprocess import call
 
 
+@asyncio.coroutine
 def fetch_content(url):
-    respone = yield from aiohttp.request('GET', url)
-    respone.close()
+    response = yield from aiohttp.request('GET', url)
+    return (yield from response.read())
 
 
 def get_images(parameter, when):
     urls = []
-    for h in ["07", "08", "09"] + list(map(str, range(10, 20))):
+    for h in constants.hours:
         url = "{0}{1}.{2}.{3}00{4}".format(
             constants.RASP_URL,
             constants.parameters[parameter],
@@ -20,18 +23,22 @@ def get_images(parameter, when):
             h,
             constants.suffix,
         )
-        urls.append(asyncio.Task(fetch_content(url)))
-    yield from asyncio.gather(*urls)
+        urls.append(asyncio.get_event_loop().run_until_complete(fetch_content(url)))
+    return urls
 
 
 @click.command()
 @click.option('--parameter', help='The parameter.')
 @click.option('--when', default="today", help='Today or tomorrow.')
 def make_gif(parameter, when):
-    loop = asyncio.get_event_loop()
     images = get_images(parameter, when)
-    loop.run_until_complete(images)
-    loop.close()
+    for img, h in zip(images, constants.hours):
+        with open('raspgif/pngs/{0}.png'.format(h), 'wb') as f:
+            f.write(img)
+
+    call(["convert", "-delay", "80", "-loop", "0", "raspgif/pngs/*png", "animated.gif"])
+    with open("animated.gif", "rb") as f:
+        sys.stdout.buffer.write(f.read())
 
 
 if __name__ == '__main__':
